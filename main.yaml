@@ -1,0 +1,82 @@
+---
+- name: Install Sonatype Nexus Repository Manager
+  hosts: localhost
+  become: yes
+
+  vars:
+    corretto_version: "8.402.08.1"
+    corretto_install_dir: "/opt/amazon-corretto-{{ corretto_version }}"
+    nexus_version: "3.62.0-01"
+    nexus_home: "/opt/nexus"
+    nexus_url: "https://download.sonatype.com/nexus/3/nexus-{{ nexus_version }}-unix.tar.gz"
+    nexus_systemd_service_name: nexus
+
+  tasks:
+    - name: get the username running the deploy
+      become: false
+      shell: "/bin/bash -c 'whoami'"
+      register: host_username
+
+    - name: Display Command Output
+      debug:
+        var: host_username.stdout
+
+    - name: Create Nexus home directory
+      ansible.builtin.file:
+        path: "{{ nexus_home }}"
+        state: directory
+        owner: "{{ host_username.stdout }}"
+        group: "{{ host_username.stdout }}"
+        mode: "0755"
+
+    - name: Download Nexus distribution
+      ansible.builtin.get_url:
+        url: "{{ nexus_url }}"
+        dest: "/tmp/nexus-{{ nexus_version }}.tar.gz"
+
+    - name: Extract Nexus distribution
+      ansible.builtin.unarchive:
+        src: "/tmp/nexus-{{ nexus_version }}.tar.gz"
+        dest: "{{ nexus_home }}"
+        remote_src: yes
+        creates: "{{ nexus_home }}/bin/nexus"
+
+    - name: Configure Nexus With Amazon Corretto
+      ansible.builtin.copy:
+        content: |
+          {{ corretto_install_dir }}/amazon-corretto-{{ corretto_version }}-linux-x64
+        dest: "/opt/nexus/nexus-3.62.0-01/.install4j/pref_jre.cfg"
+        owner: "{{ host_username.stdout }}"
+        group: "{{ host_username.stdout }}"
+        mode: "0644"
+
+    - name: Configure Nexus as a Systemd service
+      ansible.builtin.copy:
+        content: |
+          [Unit]
+          Description=Nexus Repository Manager
+          After=network.target
+
+          [Service]
+          Type=forking
+          ExecStart={{ nexus_home }}/nexus-3.62.0-01/bin/nexus start
+          ExecStop={{ nexus_home }}/nexus-3.62.0-01/bin/nexus stop
+          User={{ host_username.stdout }}
+          Restart=on-abort
+
+          [Install]
+          WantedBy=default.target
+        dest: "/etc/systemd/system/{{ nexus_systemd_service_name }}.service"
+        owner: "{{ host_username.stdout }}"
+        group: "{{ host_username.stdout }}"
+        mode: "0644"
+
+    - name: Reload Systemd to recognize the new service
+      ansible.builtin.systemd:
+        daemon_reload: yes
+
+    - name: Enable and start Nexus service
+      ansible.builtin.service:
+        name: "{{ nexus_systemd_service_name }}"
+        enabled: yes
+        state: started
