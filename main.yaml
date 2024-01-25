@@ -50,22 +50,29 @@
         group: "{{ host_username.stdout }}"
         mode: "0644"
 
+    - name: Link Binary
+      shell: "ln -s {{ nexus_home }}/nexus-3.62.0-01/bin/nexus /etc/init.d/nexus"
+      ignore_errors: true
+
     - name: Configure Nexus as a Systemd service
       ansible.builtin.copy:
         content: |
           [Unit]
-          Description=Nexus Repository Manager
+          Description=nexus service
           After=network.target
-
+            
           [Service]
           Type=forking
-          ExecStart={{ nexus_home }}/nexus-3.62.0-01/bin/nexus start
-          ExecStop={{ nexus_home }}/nexus-3.62.0-01/bin/nexus stop
+          LimitNOFILE=65536
+          ExecStart=/etc/init.d/nexus start
+          ExecStop=/etc/init.d/nexus stop 
           User={{ host_username.stdout }}
           Restart=on-abort
-
+          TimeoutSec=600
+            
           [Install]
-          WantedBy=default.target
+          WantedBy=multi-user.target
+
         dest: "/etc/systemd/system/{{ nexus_systemd_service_name }}.service"
         owner: "{{ host_username.stdout }}"
         group: "{{ host_username.stdout }}"
