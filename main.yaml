@@ -88,8 +88,29 @@
       ansible.builtin.systemd:
         daemon_reload: true
 
-    - name: Enable and start Nexus service
-      ansible.builtin.service:
-        name: "{{ nexus_systemd_service_name }}"
-        enabled: true
-        state: started
+    # - name: Enable and start Nexus service
+    #   ansible.builtin.service:
+    #     name: "{{ nexus_systemd_service_name }}"
+    #     enabled: true
+    #     state: started
+
+    - name: Configure Nexus Configuration File
+      ansible.builtin.copy:
+        content: |
+          # Jetty section
+          # application-port=8081
+          # application-host=0.0.0.0
+          # nexus-args=${jetty.etc}/jetty.xml,${jetty.etc}/jetty-http.xml,${jetty.etc}/jetty-requestlog.xml
+          nexus-context-path=/nexus
+
+          # Nexus section
+          # nexus-edition=nexus-pro-edition
+          # nexus-features=\
+          #  nexus-pro-feature
+
+          # nexus.hazelcast.discovery.isEnabled=true
+
+        dest: "{{ nexus_home }}/sonatype-work/nexus3/etc/nexus.properties"
+        owner: "{{ host_username.stdout }}"
+        group: "{{ host_username.stdout }}"
+        mode: "0644"
