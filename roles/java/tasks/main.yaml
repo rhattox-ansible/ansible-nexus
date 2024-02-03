@@ -2,8 +2,8 @@
   ansible.builtin.file:
     path: "{{ corretto_home_path }}"
     state: directory
-    owner: "{{ ansible_env.SUDO_USER }}"
-    group: "{{ ansible_env.SUDO_USER }}"
+    owner: root
+    group: root
     mode: "0755"
 
 - name: Download and Extract
@@ -30,7 +30,7 @@
 
 - name: Update the path and installs java
   block:
-    - name: Extract Corretto archive to temporary path
+    - name: Install Java To Correct Folder
       ansible.builtin.copy:
         src: "{{ corretto_tmp_path }}/amazon-corretto-{{ corretto_version }}-linux-x64/"
         dest: "{{ corretto_home_path }}/{{ corretto_version }}"
