@@ -1,13 +1,15 @@
-- name: Create Nexus group
-  ansible.builtin.group:
-    name: "{{ nexus_group }}"
-    state: present
+- name: Create service user
+  block:
+    - name: Create Nexus group
+      ansible.builtin.group:
+        name: "{{ nexus_group }}"
+        state: present
 
-- name: Create Nexus user
-  ansible.builtin.user:
-    name: "{{ nexus_user }}"
-    group: "{{ nexus_group }}"
-    createhome: false
+    - name: Create Nexus user
+      ansible.builtin.user:
+        name: "{{ nexus_user }}"
+        group: "{{ nexus_group }}"
+        createhome: false
 
 - name: Create Nexus home directory
   ansible.builtin.file:
@@ -59,6 +61,8 @@
         group: "{{ nexus_group }}"
         state: link
 
+- name: Configure nexus to work on my environment
+  block:
     - name: Generate preference for JRE
       ansible.builtin.template:
         src: roles/nexus/templates/pref_jre.cfg.j2
@@ -67,7 +71,7 @@
         owner: "{{ nexus_user }}"
         mode: "0755"
 
-    - name: Create Nexus home directory
+    - name: Create Nexus etc directory
       ansible.builtin.file:
         path: "{{ nexus_home }}/sonatype-work/nexus3/etc"
         state: directory
@@ -94,3 +98,15 @@
 - name: Reload Systemd to recognize the new service
   ansible.builtin.systemd:
     daemon_reload: true
+
+- name: Clean environment
+  block:
+    - name: Remove temporary file
+      ansible.builtin.file:
+        path: "{{ nexus_tmp_file }}"
+        state: absent
+
+    - name: Remove temporary path
+      ansible.builtin.file:
+        path: "{{ nexus_tmp_path }}"
+        state: absent
