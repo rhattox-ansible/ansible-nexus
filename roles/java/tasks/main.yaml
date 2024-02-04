@@ -1,0 +1,61 @@
+- name: "Create directory if it doesn't exists"
+  ansible.builtin.file:
+    path: "{{ corretto_home_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Download and Extract
+  block:
+    - name: Download Corretto tar file
+      ansible.builtin.get_url:
+        url: "{{ corretto_archive_url }}"
+        dest: "{{ corretto_tmp_file }}"
+        mode: "0755"
+
+    - name: Create temporary directory
+      ansible.builtin.file:
+        path: "{{ corretto_tmp_path }}"
+        state: directory
+        owner: "{{ ansible_env.SUDO_USER }}"
+        group: "{{ ansible_env.SUDO_USER }}"
+        mode: "0755"
+
+    - name: Extract Corretto archive to temporary path
+      ansible.builtin.unarchive:
+        src: "{{ corretto_tmp_file }}"
+        dest: "{{ corretto_tmp_path }}"
+        remote_src: true
+
+- name: Update the path and installs java
+  block:
+    - name: Install Java To Correct Folder
+      ansible.builtin.copy:
+        src: "{{ corretto_tmp_path }}/amazon-corretto-{{ corretto_version }}-linux-x64/"
+        dest: "{{ corretto_home_path }}/{{ corretto_version }}"
+        remote_src: true
+        mode: "0755"
+        group: root
+        owner: root
+
+    - name: Creates Symlink
+      ansible.builtin.file:
+        src: "{{ corretto_home_path }}/{{ corretto_version }}/bin/java"
+        dest: "/usr/bin/java-1.8"
+        mode: "0777"
+        owner: root
+        group: root
+        state: link
+
+- name: Clean environment
+  block:
+    - name: Remove temporary file
+      ansible.builtin.file:
+        path: "{{ corretto_tmp_file }}"
+        state: absent
+
+    - name: Remove temporary path
+      ansible.builtin.file:
+        path: "{{ corretto_tmp_path }}"
+        state: absent

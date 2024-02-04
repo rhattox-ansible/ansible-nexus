@@ -1,0 +1,112 @@
+- name: Create service user
+  block:
+    - name: Create Nexus group
+      ansible.builtin.group:
+        name: "{{ nexus_group }}"
+        state: present
+
+    - name: Create Nexus user
+      ansible.builtin.user:
+        name: "{{ nexus_user }}"
+        group: "{{ nexus_group }}"
+        createhome: false
+
+- name: Create Nexus home directory
+  ansible.builtin.file:
+    path: "{{ nexus_home }}"
+    state: directory
+    owner: "{{ nexus_user }}"
+    group: "{{ nexus_group }}"
+    mode: "0755"
+
+- name: Download and Extract
+  block:
+    - name: Download nexus tar file
+      ansible.builtin.get_url:
+        url: "{{ nexus_archive_url }}"
+        dest: "{{ nexus_tmp_file }}"
+        mode: "0755"
+
+    - name: Create temporary directory
+      ansible.builtin.file:
+        path: "{{ nexus_tmp_path }}"
+        state: directory
+        owner: "{{ ansible_env.SUDO_USER }}"
+        group: "{{ ansible_env.SUDO_USER }}"
+        mode: "0755"
+
+    - name: Extract Nexus archive to temporary path
+      ansible.builtin.unarchive:
+        src: "{{ nexus_tmp_file }}"
+        dest: "{{ nexus_tmp_path }}"
+        remote_src: true
+
+- name: Update the path and installs nexus
+  block:
+    - name: Extract Corretto archive to temporary path
+      ansible.builtin.copy:
+        src: "{{ nexus_tmp_path }}/"
+        dest: "{{ nexus_home }}"
+        remote_src: true
+        mode: "0755"
+        owner: "{{ nexus_user }}"
+        group: "{{ nexus_group }}"
+
+    - name: Creates Symlink
+      ansible.builtin.file:
+        src: "{{ nexus_home }}/nexus-{{ nexus_version }}/bin/nexus"
+        dest: "/usr/bin/nexus"
+        mode: "0777"
+        owner: "{{ nexus_user }}"
+        group: "{{ nexus_group }}"
+        state: link
+
+- name: Configure nexus to work on my environment
+  block:
+    - name: Generate preference for JRE
+      ansible.builtin.template:
+        src: roles/nexus/templates/pref_jre.cfg.j2
+        dest: "{{ nexus_home }}/nexus-{{ nexus_version }}/.install4j/pref_jre.cfg"
+        group: "{{ nexus_group }}"
+        owner: "{{ nexus_user }}"
+        mode: "0755"
+
+    - name: Create Nexus etc directory
+      ansible.builtin.file:
+        path: "{{ nexus_home }}/sonatype-work/nexus3/etc"
+        state: directory
+        owner: "{{ nexus_user }}"
+        group: "{{ nexus_group }}"
+        mode: "0755"
+
+    - name: Generate Nexus Properties
+      ansible.builtin.template:
+        src: roles/nexus/templates/nexus.properties.j2
+        dest: "{{ nexus_home }}/sonatype-work/nexus3/etc/nexus.properties"
+        group: "{{ nexus_group }}"
+        owner: "{{ nexus_user }}"
+        mode: "0755"
+
+    - name: Generate SystemD Config
+      ansible.builtin.template:
+        src: roles/nexus/templates/nexus.service.j2
+        dest: "/etc/systemd/system/nexus.service"
+        group: "{{ nexus_group }}"
+        owner: "{{ nexus_user }}"
+        mode: "0755"
+
+- name: Reload Systemd to recognize the new service
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Clean environment
+  block:
+    - name: Remove temporary file
+      ansible.builtin.file:
+        path: "{{ nexus_tmp_file }}"
+        state: absent
+
+    - name: Remove temporary path
+      ansible.builtin.file:
+        path: "{{ nexus_tmp_path }}"
+        state: absent

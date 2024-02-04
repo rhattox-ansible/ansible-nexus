@@ -1,0 +1,7 @@
+nexus_version: "3.62.0-01"
+nexus_home: "/var/lib/nexus"
+nexus_tmp_path: "/tmp/nexus"
+nexus_archive_url: "https://download.sonatype.com/nexus/3/nexus-{{ nexus_version }}-unix.tar.gz"
+nexus_tmp_file: "/tmp/nexus.tar.gz"
+nexus_group: nexus
+nexus_user: nexus
