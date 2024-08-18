@@ -110,3 +110,9 @@
       ansible.builtin.file:
         path: "{{ nexus_tmp_path }}"
         state: absent
+
+- name: Enable and start the service
+  ansible.builtin.systemd:
+    name: nexus.service
+    state: started
+    enabled: true
