@@ -5,7 +5,7 @@
 
   vars:
     corretto_home_path: "/usr/lib/jvm/corretto"
-    corretto_version: "8.402.08.1"
+    corretto_version: "17.0.13.11.1"
 
   roles:
     - java
