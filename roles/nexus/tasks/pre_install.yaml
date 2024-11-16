@@ -13,3 +13,17 @@
         home: "{{ app_home }}"
         create_home: true
         system: true
+
+    - name: Add user to the group
+      ansible.builtin.user:
+        name: "{{ app_name }}"
+        groups: "{{ app_name }}"
+        append: true
+
+- name: Update Run User
+  block:
+    - name: Add user to the group
+      ansible.builtin.user:
+        name: "{{ ansible_env.SUDO_USER }}"
+        groups: "{{ app_name }}"
+        append: true

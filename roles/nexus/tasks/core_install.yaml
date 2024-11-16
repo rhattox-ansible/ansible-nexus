@@ -1,77 +1,53 @@
-- name: Download and Extract
+- name: Download and extract tar file
   block:
-    - name: Download nexus tar file
+    - name: Download Tar
       ansible.builtin.get_url:
         url: "{{ app_archive_url }}"
         dest: "{{ app_tmp_file }}"
         owner: "{{ ansible_env.SUDO_USER }}"
         group: "{{ ansible_env.SUDO_USER }}"
-        mode: "0550"
+        mode: "0750"
 
     - name: Create temporary directory
       ansible.builtin.file:
         path: "{{ app_tmp_path }}"
-        state: directory
         owner: "{{ ansible_env.SUDO_USER }}"
         group: "{{ ansible_env.SUDO_USER }}"
-        mode: "0550"
+        state: directory
+        mode: "0750"
 
-    - name: Extract Nexus archive to temporary path
+    - name: Extract archive to temporary path
       ansible.builtin.unarchive:
         src: "{{ app_tmp_file }}"
         dest: "{{ app_tmp_path }}"
         remote_src: true
 
-- name: Update the path and installs nexus
+    - name: Delete tar file
+      ansible.builtin.file:
+        path: "{{ app_tmp_file }}"
+        state: absent
+
+- name: Install Application
   block:
-    - name: Extract Corretto archive to temporary path
+    - name: Copy temporary path to homepath
       ansible.builtin.copy:
-        remote_src: true
         src: "{{ app_tmp_path }}/"
         dest: "{{ app_home }}"
-        mode: "0550"
         owner: "{{ app_name }}"
         group: "{{ app_name }}"
+        remote_src: true
+        mode: "0750"
 
-    - name: Creates Symlink
+    - name: Delete temporary path
       ansible.builtin.file:
-        src: "{{ app_home }}/nexus-{{ app_version }}/bin/nexus"
-        dest: "/usr/bin/nexus"
-        mode: "0777"
-        owner: "root"
-        group: "root"
+        path: "{{ app_tmp_path }}"
+        state: absent
+
+    - name: Create SymLink for the App
+      ansible.builtin.file:
+        src: "{{ binary_source_path }}"
+        dest: "{{ binary_dest_path }}"
+        owner: "{{ app_name }}"
+        group: "{{ app_name }}"
         state: link
-
-- name: Configure nexus to work with Custom Java
-  block:
-    - name: Generate preference for JRE
-      ansible.builtin.template:
-        src: roles/{{ app_name }}/templates/pref_jre.cfg.j2
-        dest: "{{ app_home }}/{{ app_name }}-{{ app_version }}/.install4j/pref_jre.cfg"
-        group: "{{ app_name }}"
-        owner: "{{ app_name }}"
-        mode: "0550"
-
-    - name: Create Nexus etc directory
-      ansible.builtin.file:
-        path: "{{ app_home }}/sonatype-work/nexus3/etc"
-        state: directory
-        owner: "{{ app_name }}"
-        group: "{{ app_name }}"
-        mode: "0770"
-
-    - name: Generate Nexus Properties
-      ansible.builtin.template:
-        src: roles/nexus/templates/nexus.properties.j2
-        dest: "{{ app_home }}/sonatype-work/nexus3/etc/nexus.properties"
-        group: "{{ app_name }}"
-        owner: "{{ app_name }}"
-        mode: "0550"
-
-    - name: Generate SystemD Config
-      ansible.builtin.template:
-        src: roles/nexus/templates/nexus.service.j2
-        dest: "/etc/systemd/system/nexus.service"
-        group: "{{ app_name }}"
-        owner: "{{ app_name }}"
-        mode: "0550"
+        mode: "0555"

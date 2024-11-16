@@ -1,21 +1,54 @@
-- name: Reload Systemd to recognize the new service
-  ansible.builtin.systemd:
-    daemon_reload: true
-
-- name: Clean environment
+- name: Configure Post Installation Files
   block:
-    - name: Remove temporary file
-      ansible.builtin.file:
-        path: "{{ app_tmp_file }}"
-        state: absent
+    - name: Generate JRE Preference
+      ansible.builtin.template:
+        src: roles/{{ app_name }}/templates/pref_jre.cfg.j2
+        dest: "{{ jre_preference_path }}"
+        group: "{{ app_name }}"
+        owner: "{{ app_name }}"
+        mode: "0550"
 
-    - name: Remove temporary path
+    - name: Create ETC directory
       ansible.builtin.file:
-        path: "{{ app_tmp_path }}"
-        state: absent
+        path: "{{ app_etc_path }}"
+        state: directory
+        owner: "{{ app_name }}"
+        group: "{{ app_name }}"
+        mode: "0750"
 
-- name: Enable and start the service
-  ansible.builtin.systemd:
-    name: "{{ app_name }}.service"
-    state: started
-    enabled: true
+    - name: Generate Properties
+      ansible.builtin.template:
+        src: roles/{{ app_name }}/templates/{{ app_name }}.properties.j2
+        dest: "{{ app_properties_file_path }}"
+        group: "{{ app_name }}"
+        owner: "{{ app_name }}"
+        mode: "0550"
+
+    - name: Generate SystemD
+      ansible.builtin.template:
+        src: roles/{{ app_name }}/templates/{{ app_name }}.service.j2
+        dest: "{{ app_systemd_config_path }}"
+        group: "{{ app_name }}"
+        owner: "{{ app_name }}"
+        mode: "0550"
+
+- name: SystemD Execution
+  block:
+    - name: Reload Systemd to recognize the new service
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: Enable and start the service
+      ansible.builtin.systemd:
+        name: "{{ app_name }}.service"
+        state: started
+        # enabled: true
+
+- name: Configure Permissions
+  ansible.builtin.file:
+    path: "{{ app_home }}"
+    state: directory
+    recurse: true
+    owner: "{{ app_name }}"
+    group: "{{ app_name }}"
+    mode: "0750"

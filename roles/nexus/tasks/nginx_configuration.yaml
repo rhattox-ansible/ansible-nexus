@@ -6,7 +6,7 @@
 - name: Configure Reverse Proxy
   ansible.builtin.template:
     src: "roles/{{ app_name }}/templates/{{ app_name }}.conf.j2"
-    dest: "/etc/nginx/sites-available/{{ app_name }}.conf"
+    dest: "{{ nginx_config_path }}"
     owner: "root"
     group: "root"
     mode: "0550"

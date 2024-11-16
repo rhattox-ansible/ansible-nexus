@@ -5,9 +5,11 @@ After=network.target
 [Service]
 Type=forking
 LimitNOFILE=65536
-ExecStart=/usr/bin/{{ app_name }} start
-ExecStop=/usr/bin/{{ app_name }} stop
+ExecStart={{ binary_dest_path }} start
+ExecStop={{ binary_dest_path }} stop
 User={{ app_name }}
+Group={{ app_name }}
+
 Restart=on-abort
 TimeoutSec=60
 

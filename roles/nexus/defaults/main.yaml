@@ -1,10 +1,21 @@
 app_name: nexus
-app_home: "/var/lib/nexus"
-
 app_version: "3.71.0-06"
-app_tmp_path: "/tmp/nexus"
+
+app_home: "/var/lib/{{ app_name }}"
+app_tmp_path: "/tmp/{{ app_name }}"
 app_archive_url: "https://download.sonatype.com/nexus/3/nexus-{{ app_version }}-unix.tar.gz"
-app_tmp_file: "/tmp/nexus.tar.gz"
+app_tmp_file: "/tmp/{{ app_name }}.tar.gz"
+
+app_etc_path: "{{ app_home }}/sonatype-work/nexus3/etc"
+app_properties_file_path: "{{ app_home }}/sonatype-work/nexus3/etc/{{ app_name }}.properties"
+app_systemd_config_path: "/etc/systemd/system/{{ app_name }}.service"
+
+nginx_config_path: "/etc/nginx/sites-available/{{ app_name }}.conf"
+
+binary_source_path: "{{ app_home }}/{{ app_name }}-{{ app_version }}/bin/{{ app_name }}"
+binary_dest_path: "/usr/bin/{{ app_name }}"
 
 corretto_home_path: "/usr/lib/jvm/corretto"
 corretto_version: "17.0.13.11.1"
+
+jre_preference_path: "{{ app_home }}/{{ app_name }}-{{ app_version }}/.install4j/pref_jre.cfg"

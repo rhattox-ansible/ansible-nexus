@@ -1,2 +1,9 @@
 # ansible-nexus
-Ansible script to help nexus repository installation
+
+Make sure java is already installed. Take a look at `git@github:rhattox/ansible-java.git`
+
+# To run
+
+```
+ansible-playbook main.yaml
+```
