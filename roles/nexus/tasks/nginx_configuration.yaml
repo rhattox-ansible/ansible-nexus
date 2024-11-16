@@ -1,0 +1,18 @@
+- name: Install Nginx
+  ansible.builtin.apt:
+    name: "nginx"
+    state: present
+
+- name: Configure Reverse Proxy
+  ansible.builtin.template:
+    src: "roles/{{ app_name }}/templates/{{ app_name }}.conf.j2"
+    dest: "/etc/nginx/sites-available/{{ app_name }}.conf"
+    owner: "root"
+    group: "root"
+    mode: "0550"
+
+- name: Start Service
+  ansible.builtin.service:
+    name: "nginx"
+    state: started
+    enabled: true

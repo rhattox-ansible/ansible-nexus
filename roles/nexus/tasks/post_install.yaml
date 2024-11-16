@@ -1,0 +1,21 @@
+- name: Reload Systemd to recognize the new service
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Clean environment
+  block:
+    - name: Remove temporary file
+      ansible.builtin.file:
+        path: "{{ app_tmp_file }}"
+        state: absent
+
+    - name: Remove temporary path
+      ansible.builtin.file:
+        path: "{{ app_tmp_path }}"
+        state: absent
+
+- name: Enable and start the service
+  ansible.builtin.systemd:
+    name: "{{ app_name }}.service"
+    state: started
+    enabled: true

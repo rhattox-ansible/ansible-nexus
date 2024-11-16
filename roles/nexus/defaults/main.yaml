@@ -1,7 +1,10 @@
-nexus_version: "3.71.0-06"
-nexus_home: "/var/lib/nexus"
-nexus_tmp_path: "/tmp/nexus"
-nexus_archive_url: "https://download.sonatype.com/nexus/3/nexus-{{ nexus_version }}-unix.tar.gz"
-nexus_tmp_file: "/tmp/nexus.tar.gz"
-nexus_group: nexus
-nexus_user: nexus
+app_name: nexus
+app_home: "/var/lib/nexus"
+
+app_version: "3.71.0-06"
+app_tmp_path: "/tmp/nexus"
+app_archive_url: "https://download.sonatype.com/nexus/3/nexus-{{ app_version }}-unix.tar.gz"
+app_tmp_file: "/tmp/nexus.tar.gz"
+
+corretto_home_path: "/usr/lib/jvm/corretto"
+corretto_version: "17.0.13.11.1"

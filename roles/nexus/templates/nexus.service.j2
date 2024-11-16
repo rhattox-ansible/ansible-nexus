@@ -1,13 +1,13 @@
 [Unit]
-Description=nexus service
+Description={{ app_name }} service
 After=network.target
 
 [Service]
 Type=forking
 LimitNOFILE=65536
-ExecStart=/usr/bin/nexus start
-ExecStop=/usr/bin/nexus stop
-User={{ nexus_user }}
+ExecStart=/usr/bin/{{ app_name }} start
+ExecStop=/usr/bin/{{ app_name }} stop
+User={{ app_name }}
 Restart=on-abort
 TimeoutSec=60
 

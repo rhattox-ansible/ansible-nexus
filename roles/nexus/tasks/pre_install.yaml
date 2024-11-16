@@ -1,0 +1,15 @@
+- name: Create Service Account
+  block:
+    - name: Create Group
+      ansible.builtin.group:
+        name: "{{ app_name }}"
+        state: present
+
+    - name: Create user
+      ansible.builtin.user:
+        name: "{{ app_name }}"
+        comment: "Service account for running {{ app_name }}"
+        shell: /usr/sbin/nologin
+        home: "{{ app_home }}"
+        create_home: true
+        system: true
