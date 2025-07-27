@@ -2,12 +2,10 @@
   hosts: localhost
   become: true
   gather_facts: true
-  collections:
-    - rhattox.java_installation
   vars:
     ansible_python_interpreter: /opt/ansible-venv/bin/python
   roles:
-    - role: java
+    - role: rhattox.java_installation.java
       vars:
         java_version: 17
-    # - nexus
+    - nexus
