@@ -7,5 +7,5 @@
 - name: Post Install
   ansible.builtin.include_tasks: post_install.yaml
 
-- name: Nginx Install
-  ansible.builtin.include_tasks: nginx_configuration.yaml
+# - name: Nginx Install
+#   ansible.builtin.include_tasks: nginx_configuration.yaml
